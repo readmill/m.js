@@ -1,0 +1,15 @@
+{
+  "name": "m",
+  "version": "0.1.0",
+  "description": "A modular JavaScript system for websites",
+  "main": "lib/m.js",
+  "devDependencies": {
+    "uglify-js": "~2.3.6",
+    "jshint": "~2.1.8"
+  },
+  "repository": "",
+  "author": "",
+  "license": "MIT",
+  "readmeFilename": "README",
+  "private": true
+}
