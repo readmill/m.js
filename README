@@ -1,0 +1,65 @@
+m.js
+====
+
+A module system for websites.
+
+Development
+-----------
+
+It's very simple, hack on the code, ensure the lint and tests pass and submit
+a pull request. Rinse and repeat.
+
+To install the developer packages you'll need node and npm installed on your
+machine. Then run:
+
+    $ npm install
+
+To run the linter:
+
+    $ make lint
+
+Testing
+-------
+
+To run the suite in the browser run:
+
+    $ make test
+
+And open the browser at http://localhost:8000. You can choose a port by
+providing a `PORT` env variable to make.
+
+    $ make test PORT=4567
+
+### Writing specs
+
+These should be placed in the test/specs directory and the filename should
+be the module name ending with `-spec.js.coffee`.
+
+### Libraries
+
+- [Mocha](http://visionmedia.github.com/mocha/) - Test runner, we use the `bdd` style.
+- [Chai](http://chaijs.com/api/assert/) - Assertion library, we use `assert` style.
+- [Sinon](http://sinonjs.org/docs) - Mocking and stubbing library.
+
+### Let Helper
+
+There is also a `this.let` helper that allows you to assign lazy loaded properties
+within your tests. For example:
+
+    this.let('subject', 4);
+    this.subject // => 4
+
+    this.let('subject', Math.random());
+    this.subject // => 0.1856299617793411
+    this.subject // => 0.1856299617793411
+
+    this.let('fixture', document.createElement('div'));
+    this.let('subject', function () {
+      // Same scope available within lazy functions.
+      this.fixture.nodeName === 'DIV';
+    });
+
+License
+-------
+
+Avialable under the MIT license. See LICENSE file for details.
