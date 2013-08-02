@@ -8,7 +8,7 @@ pkgdir:
 	@mkdir -p $(PKGDIR)
 
 concat: pkgdir
-	@cat lib/m.js lib/m/{create,events,sandbox,module}.js > $(PKGDIR)/m.js
+	@cat lib/m.js lib/m/{create,sandbox,events,module}.js > $(PKGDIR)/m.js
 	@echo Created $(PKGDIR)/m.js
 
 minify: concat
