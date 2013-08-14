@@ -750,6 +750,13 @@ describe('m.module()', function () {
       assert.calledWith(target, 'module:create', this.options, this.subject);
     });
 
+    it('tears down when module element is removed', function () {
+      var target = this.subject.teardown = sinon.spy();
+      this.fixture.appendChild(this.subject.el);
+      this.subject.$el.remove();
+      assert.called(target);
+    });
+
     describe('.$()', function () {
       it('find children within the module element', function () {
         this.subject.$el.append(jQuery('<input /><input />'));
