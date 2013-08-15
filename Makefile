@@ -29,7 +29,7 @@ clean:
 build: pkgdir
 	@rm -f $(PKGDIR)/m.js
 	@echo "$$HEADER" > $(PKGDIR)/m.js
-	@cat lib/m.js lib/m/{create,sandbox,events,module}.js >> $(PKGDIR)/m.js
+	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(PKGDIR)/m.js
 	@echo Created $(PKGDIR)/m.js
 
 package: clean build
@@ -45,4 +45,4 @@ test:
 lint:
 	@`npm bin`/jshint -c jshint.json lib/**/*.js
 
-.PHONY: pkgdir build production test lint
+.PHONY: pkgdir clean build package test lint
