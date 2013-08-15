@@ -2,6 +2,7 @@
   "name": "m",
   "version": "0.1.0",
   "description": "A modular JavaScript system for websites",
+  "homepage": "http://github.com/readmill/m.js",
   "main": "lib/m.js",
   "devDependencies": {
     "uglify-js": "~2.3.6",
