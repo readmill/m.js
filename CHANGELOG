@@ -1,0 +1,8 @@
+Master
+
+* Add auto clean up of sandbox listeners when a module is removed #1.
+* Fix issue with named functions in IE8 #4.
+
+2013-08-01 v0.1.0
+
+* Initial release.
