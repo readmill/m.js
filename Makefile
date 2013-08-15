@@ -4,16 +4,21 @@ PORT ?= 8000
 default: build
 
 pkgdir:
-	@rm -r $(PKGDIR)
 	@mkdir -p $(PKGDIR)
 
-concat: pkgdir
+clean:
+	@rm -rf $(PKGDIR)
+
+build: pkgdir
+	@rm -f $(PKGDIR)/m.js
 	@cat lib/m.js lib/m/{create,sandbox,events,module}.js > $(PKGDIR)/m.js
 	@echo Created $(PKGDIR)/m.js
 
-minify: concat
-	@`npm bin`/uglifyjs $(PKGDIR)/m.js -o $(PKGDIR)/m.min.js
+package: clean build
+	@`npm bin`/uglifyjs $(PKGDIR)/m.js -m -o $(PKGDIR)/m.min.js
 	@echo Created $(PKGDIR)/m.min.js
+	@zip -qj $(PKGDIR)/m.zip $(PKGDIR)/m.js $(PKGDIR)/m.min.js
+	@echo Created $(PKGDIR)/m.zip
 
 test:
 	@echo "Tests are available at http://localhost:$(PORT)/test"
@@ -22,6 +27,4 @@ test:
 lint:
 	@`npm bin`/jshint -c jshint.json lib/**/*.js
 
-build: concat minify
-
-.PHONY: pkgdir concat minify build test lint
+.PHONY: pkgdir build production test lint
