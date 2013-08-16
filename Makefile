@@ -39,10 +39,13 @@ package: clean build
 	@echo Created $(PKGDIR)/m.zip
 
 test:
+	@phantomjs test/index.js $(GREP)
+
+serve:
 	@echo "Tests are available at http://localhost:$(PORT)/test"
 	@python -m SimpleHTTPServer $(PORT)
 
 lint:
 	@`npm bin`/jshint -c jshint.json lib/**/*.js
 
-.PHONY: pkgdir clean build package test lint
+.PHONY: pkgdir clean build package test serve lint
