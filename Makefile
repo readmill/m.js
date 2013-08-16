@@ -39,7 +39,7 @@ package: clean build
 	@echo Created $(PKGDIR)/m.zip
 
 test:
-	@echo "Tests are available at http://localhost:$(PORT)/test"
+	@echo "Tests are available at http://localhost:$(PORT)/test/index.html"
 	@python -m SimpleHTTPServer $(PORT)
 
 lint:
