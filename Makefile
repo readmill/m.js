@@ -28,7 +28,8 @@ clean:
 
 build: pkgdir
 	@rm -f $(PKGDIR)/m.js
-	@echo "$$HEADER" > $(PKGDIR)/m.js
+	@cat vendor/{soak,broadcast}.js > $(PKGDIR)/m.js
+	@echo "$$HEADER" >> $(PKGDIR)/m.js
 	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(PKGDIR)/m.js
 	@echo Created $(PKGDIR)/m.js
 
