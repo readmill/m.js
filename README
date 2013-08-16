@@ -3,6 +3,15 @@ m.js
 
 A module system for websites.
 
+Dependancies
+------------
+
+m requires that the jQuery[1] and underscore[2] libraries are available on
+the page before the m.js script is included.
+
+[1]: http://jquery.com
+[2]: http://underscorejs.org
+
 Development
 -----------
 
@@ -48,9 +57,13 @@ be the module name ending with `-spec.js`.
 
 ### Libraries
 
-- [Mocha](http://visionmedia.github.com/mocha/) - Test runner, we use the `bdd` style.
-- [Chai](http://chaijs.com/api/assert/) - Assertion library, we use `assert` style.
-- [Sinon](http://sinonjs.org/docs) - Mocking and stubbing library.
+- Mocha[1]: Test runner, we use the `bdd` style.
+- Chai[2]: Assertion library, we use `assert` style.
+- Sinon[3]: Mocking and stubbing library.
+
+[1]: http://visionmedia.github.com/mocha/
+[2]: http://chaijs.com/api/assert/
+[3]: http://sinonjs.org/docs
 
 ### Let Helper
 
