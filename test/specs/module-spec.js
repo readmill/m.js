@@ -745,6 +745,12 @@ describe('m.module()', function () {
       assert.match(this.subject.cid, /base:\d+/);
     });
 
+    it('assigns the options property', function () {
+      this.options['foo'] = 'bar';
+      assert.equal(this.subject.options.foo, 'bar');
+      assert.notEqual(this.subject.options, Module.prototype.options);
+    });
+
     it('triggers the "module:create" event if sandbox.publish exists', function () {
       var target = sinon.spy();
 
