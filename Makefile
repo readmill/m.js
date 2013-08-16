@@ -46,7 +46,8 @@ clean:
 
 build: pkgdir
 	@rm -f $(MAXOUT)
-	@echo "$$HEADER" > $(MAXOUT)
+	@cat vendor/{soak,broadcast}.js > $(MAXOUT)
+	@echo "$$HEADER" >> $(MAXOUT)
 	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(MAXOUT)
 	@echo Created $(MAXOUT)
 
@@ -70,4 +71,4 @@ serve:
 lint:
 	@`npm bin`/jshint -c jshint.json lib/**/*.js
 
-.PHONY: pkgdir clean build package test serve lint
+.PHONY: help pkgdir clean build package test serve lint
