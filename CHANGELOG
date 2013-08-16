@@ -1,5 +1,6 @@
 Master
 
+* Add a phantomjs based CLI test runner.
 * Add auto clean up of sandbox listeners when a module is removed #1.
 * Fix issue with named functions in IE8 #4.
 
