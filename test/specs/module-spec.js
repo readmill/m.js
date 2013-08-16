@@ -829,7 +829,7 @@ describe('m.module()', function () {
 
     describe('.initialize()', function () {
       it('exists as a no-op', function () {
-        assert.isFunction(this.instance.teardown);
+        assert.isFunction(this.instance.initialize);
       });
     });
 
