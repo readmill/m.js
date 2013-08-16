@@ -9,7 +9,6 @@
     <div id="mocha"></div>
     <script src="../vendor/jquery.js"></script>
     <script src="../vendor/underscore.js"></script>
-    <script src="../vendor/backbone.js"></script>
     <script src="../vendor/broadcast.js"></script>
     <script src="../vendor/soak.js"></script>
     <script src="../lib/m.js"></script>
@@ -46,7 +45,7 @@
     <script src="./specs/sandbox-spec.js"></script>
     <script>
       mocha.checkLeaks();
-      mocha.globals(['jQuery', '_', 'Backbone', 'Broadcast']);
+      mocha.globals(['jQuery', '_', 'Broadcast', 'inherit']);
       mocha.run();
     </script>
   </body>
