@@ -178,8 +178,8 @@ describe('m.module()', function () {
       };
       sinon.stub(m, 'sandbox').returns(this.sandbox);
 
-      this.module = Module.extend({el: this.element});
-      this.instance = new this.module();
+      this.module = Module.extend();
+      this.instance = new this.module({el: this.element});
 
       sinon.stub(this.module, 'create', function () {
         return this.instance;
@@ -235,7 +235,7 @@ describe('m.module()', function () {
       var target = sinon.stub(module, 'removeInstance');
       module.instance(this.factory, this.element);
 
-      this.instance.trigger('remove');
+      this.instance.emit('remove');
       assert.called(target);
       assert.calledWith(target, this.instance);
 
@@ -725,8 +725,8 @@ describe('m.module()', function () {
       });
     });
 
-    it('is an instance of Backbone.View', function () {
-      assert.instanceOf(this.subject, window.Backbone.View);
+    it('is an instance of Broadcast', function () {
+      assert.instanceOf(this.subject, window.Broadcast);
     });
 
     it('assigns .el as the element option', function () {
@@ -741,6 +741,10 @@ describe('m.module()', function () {
       assert.equal(this.subject.sandbox, this.sandbox);
     });
 
+    it('assigns a cid property', function () {
+      assert.match(this.subject.cid, /base:\d+/);
+    });
+
     it('triggers the "module:create" event if sandbox.publish exists', function () {
       var target = sinon.spy();
 
@@ -748,6 +752,26 @@ describe('m.module()', function () {
       var subject = this.subject;
       assert.called(target);
       assert.calledWith(target, 'module:create', this.options, this.subject);
+    });
+
+    it('initializes the module', function () {
+      var target = sinon.spy();
+      var ChildModule = Module.extend({initialize: target});
+
+      new ChildModule();
+      assert.called(target);
+    });
+
+    it('sets up the event handlers', function () {
+      var target = sinon.spy();
+      var ChildModule = Module.extend({
+        events: {click: '_onClick'},
+        _onClick: target
+      });
+
+      var childModule = new ChildModule();
+      childModule.$el.click();
+      assert.called(target);
     });
 
     it('tears down when module element is removed', function () {
@@ -797,9 +821,15 @@ describe('m.module()', function () {
       });
     });
 
+    describe('.initialize()', function () {
+      it('exists as a no-op', function () {
+        assert.isFunction(this.instance.teardown);
+      });
+    });
+
     describe('.teardown()', function () {
-      it('simply returns itself', function () {
-        assert.strictEqual(this.subject.teardown(), this.subject);
+      it('exists as a no-op', function () {
+        assert.isFunction(this.instance.teardown);
       });
     });
 
@@ -809,6 +839,15 @@ describe('m.module()', function () {
         this.subject.remove();
 
         assert.called(target);
+      });
+
+      it('triggers the "remove" event on itself', function () {
+        var target = sinon.spy();
+        this.subject.addListener('remove', target);
+
+        this.subject.remove();
+        assert.called(target);
+        assert.calledWith(target, this.subject);
       });
 
       it('triggers the "module:remove" event if sandbox.publish exists', function () {
@@ -825,6 +864,77 @@ describe('m.module()', function () {
         this.subject.remove();
 
         assert.equal(this.fixture.children.length, 0);
+      });
+    });
+
+    describe('.delegateEvents()', function () {
+      it('binds a handler for an event on the module element', function () {
+        var target = this.subject._onClick = sinon.spy();
+
+        this.subject.delegateEvents({'click': '_onClick'});
+        this.subject.$el.click();
+
+        assert.called(target);
+      });
+
+      it('delegates a handler for an event on a child element', function () {
+        var target = this.subject._onClick = sinon.spy();
+        this.subject.el.appendChild(document.createElement('span'));
+
+        this.subject.delegateEvents({'click span': '_onClick'});
+        this.subject.$('span').click();
+
+        assert.called(target);
+      });
+
+      it('binds the handler to the module scope', function () {
+        var target = this.subject._onClick = sinon.spy();
+
+        this.subject.delegateEvents({'click': '_onClick'});
+        this.subject.$el.click();
+
+        assert.calledOn(target, this.subject);
+      });
+
+      it('accepts a function rather than a method name', function () {
+        var target = sinon.spy();
+
+        this.subject.delegateEvents({'click': target});
+        this.subject.$el.click();
+
+        assert.called(target);
+      });
+
+      it('unbinds all existing delegated events', function () {
+        var target = sinon.spy();
+
+        this.subject.delegateEvents({'click': target});
+        this.subject.delegateEvents();
+        this.subject.$el.click();
+
+        assert.notCalled(target);
+      });
+    });
+
+    describe('.undelegateEvents()', function () {
+      it('unbinds listeners bound using .delegateEvents()', function () {
+        var target = sinon.spy();
+
+        this.subject.delegateEvents({'click': target});
+        this.subject.undelegateEvents();
+        this.subject.$el.click();
+
+        assert.notCalled(target);
+      });
+
+      it('does not unbind other listeners', function () {
+        var target = sinon.spy();
+
+        this.subject.$el.on('click', target);
+        this.subject.undelegateEvents();
+        this.subject.$el.click();
+
+        assert.called(target);
       });
     });
   });
