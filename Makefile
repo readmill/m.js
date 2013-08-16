@@ -64,7 +64,7 @@ test:
 	@phantomjs test/index.js $(GREP)
 
 serve:
-	@echo "Tests are available at http://localhost:$(PORT)/test"
+	@echo "Tests are available at http://localhost:$(PORT)/test/index.html"
 	@python -m SimpleHTTPServer $(PORT)
 
 lint:
