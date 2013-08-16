@@ -29,6 +29,8 @@ endef
 export USAGE
 
 PKGDIR = pkg
+MAXOUT = $(PKGDIR)/m.js
+MINOUT = $(PKGDIR)/m.min.js
 PORT ?= 8000
 
 default: help
@@ -43,16 +45,20 @@ clean:
 	@rm -rf $(PKGDIR)
 
 build: pkgdir
-	@rm -f $(PKGDIR)/m.js
-	@echo "$$HEADER" > $(PKGDIR)/m.js
-	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(PKGDIR)/m.js
-	@echo Created $(PKGDIR)/m.js
+	@rm -f $(MAXOUT)
+	@echo "$$HEADER" > $(MAXOUT)
+	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(MAXOUT)
+	@echo Created $(MAXOUT)
 
 package: clean build
-	@`npm bin`/uglifyjs $(PKGDIR)/m.js --mangle --comments '/Copyright \d{4}/' --output $(PKGDIR)/m.min.js
-	@echo Created $(PKGDIR)/m.min.js
-	@zip -qj $(PKGDIR)/m.zip $(PKGDIR)/{m.js,m.min.js,LICENSE}
-	@echo Created $(PKGDIR)/m.zip
+	@`npm bin`/uglifyjs $(MAXOUT) --mangle --comments '/Copyright \d{4}/' --output $(MINOUT)
+	@cat $(MINOUT) | gzip -c > $(MINOUT).gz
+	@echo "Built files..."
+	@ls -lahS pkg/*.{js,gz} | awk '{printf "%s\t%s\n", $$9, $$5}'
+	@rm $(MINOUT).gz
+
+	@zip -qj $(PKGDIR)/m.zip $(MAXOUT) $(MINOUT) LICENSE
+	@echo "Created $(PKGDIR)/m.zip"
 
 test:
 	@phantomjs test/index.js $(GREP)
