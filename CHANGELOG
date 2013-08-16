@@ -1,6 +1,7 @@
 Master
 
 * Add a phantomjs based CLI test runner.
+* Remove dependancy on Backbone #2.
 * Add auto clean up of sandbox listeners when a module is removed #1.
 * Fix issue with named functions in IE8 #4.
 
