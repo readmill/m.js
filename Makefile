@@ -15,10 +15,26 @@ define HEADER
 endef
 export HEADER
 
+define USAGE
+Usage instructions:
+    make serve                runs a development server on port 8000
+    make serve PORT=[port]    runs a development server on the port specified
+    make test                 runs the test suite using phantomjs
+    make test GREP=[filter]   runs the tests matching filter
+    make clean                removes the pkg directory
+    make build                creates a development build
+    make package              creates a production (minified) build
+    make help                 displays this message
+endef
+export USAGE
+
 PKGDIR = pkg
 PORT ?= 8000
 
-default: build
+default: help
+
+help:
+	@echo "$$USAGE"
 
 pkgdir:
 	@mkdir -p $(PKGDIR)
