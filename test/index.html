@@ -7,6 +7,11 @@
   </head>
   <body>
     <div id="mocha"></div>
+    <script src="./vendor/let.js"></script>
+    <script src="./vendor/chai.js"></script>
+    <script src="./vendor/sinon.js"></script>
+    <script src="./vendor/mocha.js"></script>
+    <script src="./vendor/mocha.phantom.js"></script>
     <script src="../vendor/jquery.js"></script>
     <script src="../vendor/underscore.js"></script>
     <script src="../vendor/broadcast.js"></script>
@@ -17,11 +22,6 @@
     <script src="../lib/m/sandbox.js"></script>
     <script src="../lib/m/events.js"></script>
     <script src="../lib/m/module.js"></script>
-    <script src="./vendor/let.js"></script>
-    <script src="./vendor/chai.js"></script>
-    <script src="./vendor/sinon.js"></script>
-    <script src="./vendor/mocha.js"></script>
-    <script src="./vendor/mocha.phantom.js"></script>
     <script>
       mocha.setup({
         ui: 'bdd',
@@ -44,8 +44,8 @@
     <script src="./specs/events-spec.js"></script>
     <script src="./specs/sandbox-spec.js"></script>
     <script>
-      mocha.checkLeaks();
-      mocha.globals(['jQuery', '_', 'Broadcast', 'inherit']);
+      //mocha.checkLeaks();
+      //mocha.globals(['_', 'jQuery', 'm']);
       mocha.run();
     </script>
   </body>
