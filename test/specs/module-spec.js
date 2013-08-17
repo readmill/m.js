@@ -2,11 +2,9 @@ describe('m.module()', function () {
   var module = m.module;
   var Module = module.Module;
   var ModuleFactory = module.ModuleFactory;
+  var ModuleRegistry = module.ModuleRegistry;
 
   beforeEach(function () {
-    module.registry = {};
-    module.instances = {};
-
     this.let('factory', function () {
       return (new module.ModuleFactory('test')).build();
     });
@@ -27,414 +25,439 @@ describe('m.module()', function () {
     this.fixture.parentNode.removeChild(this.fixture);
   });
 
-  it('adds a new item to the module.registry', function () {
-    module('test', {});
+  it('forwards the call on to .define()', function () {
+    var target = sinon.stub(module, 'define');
+    var methods = {};
+    module('test', methods);
 
-    var test = module.registry.test;
-    assert.instanceOf(test, ModuleFactory);
-  });
-
-  it('creates a new ModuleFactory instance', function () {
-    var instance = new ModuleFactory('name');
-    var target = sinon.stub(module, 'ModuleFactory').returns(instance);
-
-    module('name');
-    assert.calledWithNew(target);
-    assert.calledWith(target, 'name', module.find);
-
-    target.restore();
-  });
-
-  it('passes the methods into the ModuleFactory instance', function () {
-    var methods = {method1: 'method1'};
-    var instance = new ModuleFactory('name');
-    var target = sinon.stub(instance, 'methods');
-
-    sinon.stub(module, 'ModuleFactory').returns(instance);
-
-    module('name', methods);
     assert.called(target);
-    assert.calledWith(target, {method1: 'method1'});
+    assert.calledOn(target, module);
+    assert.calledWith(target, 'test', methods);
 
-    module.ModuleFactory.restore();
-  });
-
-  it('throws an exception if the module is already defined', function () {
-    module('name', this.factory);
-    assert.throws(function () {
-      module('name', this.factory);
-    });
-  });
-
-  it('returns the newly created object', function () {
-    var instance = new ModuleFactory('name');
-    var target = sinon.stub(module, 'ModuleFactory').returns(instance);
-    assert.equal(module('name', this.factory), instance);
     target.restore();
   });
 
-  describe('.find()', function () {
-    beforeEach(function () {
-      this.let('example', new ModuleFactory('example'));
-      module.registry.example = this.example;
-    });
-
-    it('finds an item in the module registry', function () {
-      assert.equal(module.find('example'), this.example);
-    });
-
-    it('returns null if no module is found', function () {
-      assert.isNull(module.find('non-existant'));
-    });
+  it('has all the properties from a ModuleRegistry instance', function () {
+    var registry = new ModuleRegistry();
+    for (var prop in registry) {
+      assert.property(module, prop);
+    }
   });
 
-  describe('.create()', function () {
-    it('creates a new instance of the module with the element', function () {
-      module('my-new-module');
-      var element = document.createElement('div');
-      var options = {batman: 'two-face'};
-      var result  = module.create('my-new-module', element, options);
-      assert.equal(result.el, element);
-      assert.equal(result.type(), 'my-new-module');
-      assert.equal(result.options.batman, 'two-face');
-    });
-  });
-
-  describe('.initialize()', function () {
+  describe('ModuleRegistry', function () {
     beforeEach(function () {
-      this.let('element1', jQuery('<div data-test1>').appendTo(this.fixture));
-      this.let('element2', jQuery('<div data-test1>').appendTo(this.fixture));
-      this.let('element3', jQuery('<div data-test2>').appendTo(this.fixture));
+      this.let('moduleRegistry', function () {
+        return new m.module.ModuleRegistry();
+      });
+    });
 
-      this.let('test1', function () {
-        return new ModuleFactory('test1', {});
+    describe('.define()', function () {
+      it('adds a new item to the module.registry', function () {
+        this.moduleRegistry.define('test', {});
+
+        var test = this.moduleRegistry.registry.test;
+        assert.instanceOf(test, ModuleFactory);
       });
 
-      // Add test1 to the registry.
-      module.registry = {
-        test1: this.test1
-      };
+      it('creates a new ModuleFactory instance', function () {
+        var instance = new ModuleFactory('name');
+        var target = sinon.stub(module, 'ModuleFactory').returns(instance);
 
-      this.let('target', sinon.stub(module, 'instance'));
+        this.moduleRegistry.define('name');
+        assert.calledWithNew(target);
+        assert.calledWith(target, 'name', this.moduleRegistry.find);
+
+        target.restore();
+      });
+
+      it('passes the methods into the ModuleFactory instance', function () {
+        var methods = {method1: 'method1'};
+        var instance = new ModuleFactory('name');
+        var target = sinon.stub(instance, 'methods');
+
+        sinon.stub(module, 'ModuleFactory').returns(instance);
+
+        this.moduleRegistry.define('name', methods);
+        assert.called(target);
+        assert.calledWith(target, {method1: 'method1'});
+
+        module.ModuleFactory.restore();
+      });
+
+      it('throws an exception if the module is already defined', function () {
+        this.moduleRegistry.define('name', this.factory);
+        assert.throws(function () {
+          this.moduleRegistry.define('name', this.factory);
+        }.bind(this));
+      });
+
+      it('returns the newly created object', function () {
+        var instance = new ModuleFactory('name');
+        var target = sinon.stub(module, 'ModuleFactory').returns(instance);
+        assert.equal(this.moduleRegistry.define('name', this.factory), instance);
+        target.restore();
+      });
     });
 
-    afterEach(function () {
-      this.target.restore();
-    });
-
-    it('finds all elements with the `data-*` attribute', function () {
-      module.initialize(this.fixture);
-      assert.called(this.target);
-    });
-
-    it('skips modules that are not functions', function () {
-      module.initialize(this.fixture);
-      assert.calledTwice(this.target);
-    });
-
-    it('calls module.instance() with the element and factory', function () {
-      module.initialize(this.fixture);
-      assert.calledWith(this.target, this.test1, this.element1[0]);
-      assert.calledWith(this.target, this.test1, this.element2[0]);
-    });
-
-    describe('', function () {
+    describe('.find()', function () {
       beforeEach(function () {
-        this.let('delegate', sinon.stub(module, 'delegate'));
+        this.let('example', new ModuleFactory('example'));
+        this.moduleRegistry.registry.example = this.example;
+      });
+
+      it('finds an item in the module registry', function () {
+        assert.equal(this.moduleRegistry.find('example'), this.example);
+      });
+
+      it('returns null if no module is found', function () {
+        assert.isNull(this.moduleRegistry.find('non-existant'));
+      });
+    });
+
+    describe('.create()', function () {
+      it('creates a new instance of the module with the element', function () {
+        this.moduleRegistry.define('my-new-module');
+        var element = document.createElement('div');
+        var options = {batman: 'two-face'};
+        var result  = this.moduleRegistry.create('my-new-module', element, options);
+        assert.equal(result.el, element);
+        assert.equal(result.type(), 'my-new-module');
+        assert.equal(result.options.batman, 'two-face');
+      });
+    });
+
+    describe('.initialize()', function () {
+      beforeEach(function () {
+        this.let('element1', jQuery('<div data-test1>').appendTo(this.fixture));
+        this.let('element2', jQuery('<div data-test1>').appendTo(this.fixture));
+        this.let('element3', jQuery('<div data-test2>').appendTo(this.fixture));
+
+        this.let('test1', function () {
+          return new ModuleFactory('test1', {});
+        });
+
+        // Add test1 to the registry.
+        this.moduleRegistry.registry = {
+          test1: this.test1
+        };
+
+        this.let('target', sinon.stub(this.moduleRegistry, 'instance'));
       });
 
       afterEach(function () {
-        this.delegate.restore();
+        this.target.restore();
       });
 
-      it('delegates initilization to the document if events are provided', function () {
-        this.test1.events = [{}];
-        module.initialize(this.fixture);
-        assert.called(this.delegate);
+      it('finds all elements with the `data-*` attribute', function () {
+        this.moduleRegistry.initialize(this.fixture);
+        assert.called(this.target);
       });
 
-      it('does not initialize the module if it is has been deferred', function () {
-        this.test1.events = [{}];
-        module.initialize(this.fixture);
-        assert.notCalled(this.target);
-      });
-    });
-
-    it('returns the module object', function () {
-      assert.equal(module.initialize(), module);
-    });
-  });
-
-  describe('.instance()', function () {
-    beforeEach(function () {
-      this.element = document.createElement('div');
-      this.factory = new ModuleFactory('test');
-      this.factory.options = this.defaults = {test1: 'a', test2: 'b', test3: 'c'};
-
-      this.sandbox = {
-        i18n: {
-          translate: sinon.spy()
-        }
-      };
-      sinon.stub(m, 'sandbox').returns(this.sandbox);
-
-      this.module = Module.extend();
-      this.instance = new this.module({el: this.element});
-
-      sinon.stub(this.module, 'create', function () {
-        return this.instance;
-      }.bind(this));
-      sinon.stub(this.factory, 'build').returns(this.module);
-
-      this.extractedOptions = {test1: 1, test2: 2};
-      sinon.stub(this.factory, 'extract').returns(this.extractedOptions);
-    });
-
-    afterEach(function () {
-      m.sandbox.restore();
-      this.factory.extract.restore();
-    });
-
-    it('extract the options from the element', function () {
-      module.instance(this.factory, this.element);
-
-      assert.called(this.factory.extract);
-      assert.calledWith(this.factory.extract, this.element);
-    });
-
-    it('not modify the defaults object', function () {
-      var clone = _.extend({}, this.defaults);
-      module.instance(this.factory, this.element);
-
-      assert.deepEqual(this.defaults, clone);
-    });
-
-    it('create a sandbox object', function () {
-      module.instance(this.factory, this.element);
-      assert.called(m.sandbox);
-    });
-
-    it('initialize the module factory with the sandbox, options and translate function', function () {
-      module.instance(this.factory, this.element);
-
-      assert.called(this.module.create);
-      assert.calledWith(this.module.create, _.extend({}, this.extractedOptions, {
-        el: this.element,
-        sandbox: this.sandbox
-      }));
-    });
-
-    it('calls the module.run() method', function () {
-      var target = sinon.stub(this.instance, 'run');
-      module.instance(this.factory, this.element);
-
-      assert.called(target);
-    });
-
-    it('listens for the remove event and unbinds the listeners', function () {
-      var target = sinon.stub(module, 'removeInstance');
-      module.instance(this.factory, this.element);
-
-      this.instance.emit('remove');
-      assert.called(target);
-      assert.calledWith(target, this.instance);
-
-      target.restore();
-    });
-
-    it('it adds the instance to the module cache', function () {
-      var target = sinon.stub(module, 'addInstance');
-      module.instance(this.factory, this.element);
-
-      assert.called(target);
-      assert.calledWith(target, this.instance);
-
-      target.restore();
-    });
-
-    it('simply calls run() if the module already exists', function () {
-      module.instances.test = [this.instance];
-
-      var target = sinon.stub(this.instance, 'run');
-      module.instance(this.factory, this.element);
-
-      assert.called(target);
-      assert.notCalled(this.factory.build);
-    });
-
-    it('returns the newly created instance', function () {
-      var instance = module.instance(this.factory, this.element);
-      assert.instanceOf(instance, Module);
-    });
-  });
-
-  describe('.delegate()', function () {
-    beforeEach(function () {
-      this.let('document', jQuery(document));
-      this.let('factory', new ModuleFactory('test'));
-      this.let('events', [{on: 'click'}, {on: 'keypress'}]);
-
-      this.factory.events = this.events;
-
-      sinon.stub(jQuery.fn, 'init').returns(this.document);
-      sinon.stub(this.document, 'on');
-    });
-
-    afterEach(function () {
-      jQuery.fn.init.restore();
-    });
-
-    it('registers an event handler on the document for each event', function () {
-      module.delegate(this.factory);
-      assert.calledTwice(this.document.on);
-    });
-
-    it('passes in the factory and options as data properties of the event', function () {
-      module.delegate(this.factory);
-      assert.calledWith(this.document.on, 'click', '[data-test]', {
-        factory: this.factory,
-        options: this.events[0]
-      }, module.delegateHandler);
-    });
-
-    it('sets the `hasDelegated` flag on the factory', function () {
-      module.delegate(this.factory);
-      assert.isTrue(this.factory.hasDelegated);
-    });
-
-    it('does nothing if the `hasDelegated` flag is set on the factory', function () {
-      this.factory.hasDelegated = true;
-      module.delegate(this.factory);
-      assert.notCalled(this.document.on);
-    });
-  });
-
-  describe('module.delegateHandler', function () {
-    beforeEach(function () {
-      this.let('element', document.createElement('div'));
-      this.let('factory', new ModuleFactory('test'));
-      this.let('event', function () {
-        return jQuery.Event('click', {currentTarget: this.element, data: {factory: this.factory, options: {}}});
+      it('skips modules that are not functions', function () {
+        this.moduleRegistry.initialize(this.fixture);
+        assert.calledTwice(this.target);
       });
 
-      sinon.stub(module, 'instance');
-    });
+      it('calls module.instance() with the element and factory', function () {
+        this.moduleRegistry.initialize(this.fixture);
+        assert.calledWith(this.target, this.test1, this.element1[0]);
+        assert.calledWith(this.target, this.test1, this.element2[0]);
+      });
 
-    afterEach(function () {
-      module.instance.restore();
-    });
-
-    it('instantiates the module with the factory and current event target', function () {
-      module.delegateHandler(this.event);
-      assert.calledWith(module.instance, this.factory, this.element);
-    });
-
-    it('prevents the default event action', function () {
-      module.delegateHandler(this.event);
-      assert.isTrue(this.event.isDefaultPrevented());
-    });
-
-    it('does not prevent the default event action if options.preventDefault is false', function () {
-      this.event.data.options.preventDefault = false;
-      module.delegateHandler(this.event);
-      assert.isFalse(this.event.isDefaultPrevented());
-    });
-
-    it('does not try to call options.callback if it is not a function', function () {
-      [null, undefined, 'string', 10, false, true].forEach(function (value) {
-        var event = this.event;
-        event.data.options.callback = value;
-
-        assert.doesNotThrow(function () {
-          module.delegateHandler(event);
+      describe('', function () {
+        beforeEach(function () {
+          this.let('delegate', sinon.stub(this.moduleRegistry, 'delegate'));
         });
-      }, this);
+
+        afterEach(function () {
+          this.delegate.restore();
+        });
+
+        it('delegates initilization to the document if events are provided', function () {
+          this.test1.events = [{}];
+          this.moduleRegistry.initialize(this.fixture);
+          assert.called(this.delegate);
+        });
+
+        it('does not initialize the module if it is has been deferred', function () {
+          this.test1.events = [{}];
+          this.moduleRegistry.initialize(this.fixture);
+          assert.notCalled(this.target);
+        });
+      });
+
+      it('returns the module object', function () {
+        assert.equal(this.moduleRegistry.initialize(), this.moduleRegistry);
+      });
     });
 
-    it('does nothing if the meta key is held down', function () {
-      this.event.metaKey = true;
-      module.delegateHandler(this.event);
-      assert.notCalled(module.instance);
+    describe('.instance()', function () {
+      beforeEach(function () {
+        this.element = document.createElement('div');
+        this.factory = new ModuleFactory('test');
+        this.factory.options = this.defaults = {test1: 'a', test2: 'b', test3: 'c'};
+
+        this.sandbox = {
+          i18n: {
+            translate: sinon.spy()
+          }
+        };
+        sinon.stub(m, 'sandbox').returns(this.sandbox);
+
+        this.module = Module.extend();
+        this.instance = new this.module({el: this.element});
+
+        sinon.stub(this.module, 'create', function () {
+          return this.instance;
+        }.bind(this));
+        sinon.stub(this.factory, 'build').returns(this.module);
+
+        this.extractedOptions = {test1: 1, test2: 2};
+        sinon.stub(this.factory, 'extract').returns(this.extractedOptions);
+      });
+
+      afterEach(function () {
+        m.sandbox.restore();
+        this.factory.extract.restore();
+      });
+
+      it('extract the options from the element', function () {
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.called(this.factory.extract);
+        assert.calledWith(this.factory.extract, this.element);
+      });
+
+      it('not modify the defaults object', function () {
+        var clone = _.extend({}, this.defaults);
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.deepEqual(this.defaults, clone);
+      });
+
+      it('create a sandbox object', function () {
+        this.moduleRegistry.instance(this.factory, this.element);
+        assert.called(m.sandbox);
+      });
+
+      it('initialize the module factory with the sandbox, options and translate function', function () {
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.called(this.module.create);
+        assert.calledWith(this.module.create, _.extend({}, this.extractedOptions, {
+          el: this.element,
+          sandbox: this.sandbox
+        }));
+      });
+
+      it('calls the .run() method', function () {
+        var target = sinon.stub(this.instance, 'run');
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.called(target);
+      });
+
+      it('listens for the remove event and unbinds the listeners', function () {
+        var target = sinon.stub(this.moduleRegistry, 'removeInstance');
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        this.instance.emit('remove');
+        assert.called(target);
+        assert.calledWith(target, this.instance);
+
+        target.restore();
+      });
+
+      it('it adds the instance to the module cache', function () {
+        var target = sinon.stub(this.moduleRegistry, 'addInstance');
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.called(target);
+        assert.calledWith(target, this.instance);
+
+        target.restore();
+      });
+
+      it('simply calls run() if the module already exists', function () {
+        this.moduleRegistry.instances.test = [this.instance];
+
+        var target = sinon.stub(this.instance, 'run');
+        this.moduleRegistry.instance(this.factory, this.element);
+
+        assert.called(target);
+        assert.notCalled(this.factory.build);
+      });
+
+      it('returns the newly created instance', function () {
+        var instance = this.moduleRegistry.instance(this.factory, this.element);
+        assert.instanceOf(instance, Module);
+      });
     });
-  });
 
-  describe('.findInstance()', function () {
-    it('finds an instance for the factory and element provided', function () {
-      module.instances.test = [this.instance];
-      var target = module.findInstance(this.factory, this.element);
-      assert.strictEqual(target, this.instance);
+    describe('.delegate()', function () {
+      beforeEach(function () {
+        this.let('document', jQuery(document));
+        this.let('factory', new ModuleFactory('test'));
+        this.let('events', [{on: 'click'}, {on: 'keypress'}]);
+
+        this.factory.events = this.events;
+
+        sinon.stub(jQuery.fn, 'init').returns(this.document);
+        sinon.stub(this.document, 'on');
+      });
+
+      afterEach(function () {
+        jQuery.fn.init.restore();
+      });
+
+      it('registers an event handler on the document for each event', function () {
+        this.moduleRegistry.delegate(this.factory);
+        assert.calledTwice(this.document.on);
+      });
+
+      it('passes in the factory and options as data properties of the event', function () {
+        this.moduleRegistry.delegate(this.factory);
+        assert.calledWith(this.document.on, 'click', '[data-test]', {
+          factory: this.factory,
+          options: this.events[0]
+        }, this.moduleRegistry.delegateHandler);
+      });
+
+      it('sets the `hasDelegated` flag on the factory', function () {
+        this.moduleRegistry.delegate(this.factory);
+        assert.isTrue(this.factory.hasDelegated);
+      });
+
+      it('does nothing if the `hasDelegated` flag is set on the factory', function () {
+        this.factory.hasDelegated = true;
+        this.moduleRegistry.delegate(this.factory);
+        assert.notCalled(this.document.on);
+      });
     });
 
-    it('returns null if no instance can be found', function () {
-      var target = module.findInstance(this.factory, this.element);
-      assert.isNull(target);
-    });
-  });
+    describe('.delegateHandler', function () {
+      beforeEach(function () {
+        this.let('element', document.createElement('div'));
+        this.let('factory', new ModuleFactory('test'));
+        this.let('event', function () {
+          return jQuery.Event('click', {currentTarget: this.element, data: {factory: this.factory, options: {}}});
+        });
 
-  describe('.addInstance()', function () {
-    it('adds the instance to the module.instances cache', function () {
-      var target = module.addInstance(this.instance);
-      assert.deepEqual(module.instances.test, [this.instance]);
-    });
+        sinon.stub(this.moduleRegistry, 'instance');
+      });
 
-    it('creates the array if it does not already exist', function () {
-      var target = module.addInstance(this.instance);
-      assert.deepEqual(module.instances.test, [this.instance]);
-    });
-  });
+      it('instantiates the module with the factory and current event target', function () {
+        this.moduleRegistry.delegateHandler(this.event);
+        assert.calledWith(this.moduleRegistry.instance, this.factory, this.element);
+      });
 
-  describe('.removeInstance()', function () {
-    beforeEach(function () {
-      module.instances.test = [this.instance];
-    });
+      it('prevents the default event action', function () {
+        this.moduleRegistry.delegateHandler(this.event);
+        assert.isTrue(this.event.isDefaultPrevented());
+      });
 
-    it('removes the instance from the cache', function () {
-      module.removeInstance(this.instance);
-      assert.deepEqual(module.instances.test, []);
-    });
-  });
+      it('does not prevent the default event action if options.preventDefault is false', function () {
+        this.event.data.options.preventDefault = false;
+        this.moduleRegistry.delegateHandler(this.event);
+        assert.isFalse(this.event.isDefaultPrevented());
+      });
 
-  describe('.lookup()', function () {
-    beforeEach(function () {
-      module.instances.test = [this.instance];
-    });
+      it('does not try to call options.callback if it is not a function', function () {
+        [null, undefined, 'string', 10, false, true].forEach(function (value) {
+          var event = this.event;
+          event.data.options.callback = value;
 
-    it('returns all modules for the element provided', function () {
-      var result = module.lookup(this.instance.el);
-      assert.deepEqual(result, [this.instance]);
-    });
+          assert.doesNotThrow(function () {
+            this.moduleRegistry.delegateHandler(event);
+          }.bind(this));
+        }, this);
+      });
 
-    it('returns an empty array if no elements are found', function () {
-      var result = module.lookup(document.createElement('a'));
-      assert.deepEqual(result, []);
-    });
-
-    it('returns the exact module if a type is provided', function () {
-      var result = module.lookup(this.instance.el, 'test');
-      assert.equal(result, this.instance);
+      it('does nothing if the meta key is held down', function () {
+        this.event.metaKey = true;
+        this.moduleRegistry.delegateHandler(this.event);
+        assert.notCalled(this.moduleRegistry.instance);
+      });
     });
 
-    it('returns null if the module was not found for the element provided', function () {
-      var result = module.lookup(this.instance.el, 'non-existant');
-      assert.isNull(result);
-    });
-  });
+    describe('.findInstance()', function () {
+      it('finds an instance for the factory and element provided', function () {
+        this.moduleRegistry.instances.test = [this.instance];
+        var target = this.moduleRegistry.findInstance(this.factory, this.element);
+        assert.strictEqual(target, this.instance);
+      });
 
-  describe('.mixin()', function () {
-    it('extends the Module prototype', function () {
-      var methods = {method1: function () {}, prop1: 'property'};
-
-      module.mixin(methods);
-
-      assert.propertyVal(Module.prototype, 'prop1', 'property');
-      assert.propertyVal(Module.prototype, 'method1', methods.method1);
+      it('returns null if no instance can be found', function () {
+        var target = this.moduleRegistry.findInstance(this.factory, this.element);
+        assert.isNull(target);
+      });
     });
 
-    it('throws an error if the property has already been set', function () {
-      Module.prototype.method1 = function () {};
+    describe('.addInstance()', function () {
+      it('adds the instance to the module.instances cache', function () {
+        var target = this.moduleRegistry.addInstance(this.instance);
+        assert.deepEqual(this.moduleRegistry.instances.test, [this.instance]);
+      });
 
-      assert.throws(function () {
-        module.mixin({method1: function () {}});
+      it('creates the array if it does not already exist', function () {
+        var target = this.moduleRegistry.addInstance(this.instance);
+        assert.deepEqual(this.moduleRegistry.instances.test, [this.instance]);
+      });
+    });
+
+    describe('.removeInstance()', function () {
+      beforeEach(function () {
+        this.moduleRegistry.instances.test = [this.instance];
+      });
+
+      it('removes the instance from the cache', function () {
+        this.moduleRegistry.removeInstance(this.instance);
+        assert.deepEqual(this.moduleRegistry.instances.test, []);
+      });
+    });
+
+    describe('.lookup()', function () {
+      beforeEach(function () {
+        this.moduleRegistry.instances.test = [this.instance];
+      });
+
+      it('returns all modules for the element provided', function () {
+        var result = this.moduleRegistry.lookup(this.instance.el);
+        assert.deepEqual(result, [this.instance]);
+      });
+
+      it('returns an empty array if no elements are found', function () {
+        var result = this.moduleRegistry.lookup(document.createElement('a'));
+        assert.deepEqual(result, []);
+      });
+
+      it('returns the exact module if a type is provided', function () {
+        var result = this.moduleRegistry.lookup(this.instance.el, 'test');
+        assert.equal(result, this.instance);
+      });
+
+      it('returns null if the module was not found for the element provided', function () {
+        var result = this.moduleRegistry.lookup(this.instance.el, 'non-existant');
+        assert.isNull(result);
+      });
+    });
+
+    describe('.mixin()', function () {
+      it('extends the Module prototype', function () {
+        var methods = {method1: function () {}, prop1: 'property'};
+
+        this.moduleRegistry.mixin(methods);
+
+        assert.propertyVal(Module.prototype, 'prop1', 'property');
+        assert.propertyVal(Module.prototype, 'method1', methods.method1);
+      });
+
+      it('throws an error if the property has already been set', function () {
+        Module.prototype.method1 = function () {};
+
+        assert.throws(function () {
+          this.moduleRegistry.mixin({method1: function () {}});
+        }.bind(this));
       });
     });
   });
