@@ -6,7 +6,7 @@
   "main": "lib/m.js",
   "devDependencies": {
     "uglify-js": "~2.3.6",
-    "jshint": "~2.1.8"
+    "jshint": "~2.1.10"
   },
   "repository": "",
   "author": "",
