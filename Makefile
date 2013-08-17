@@ -4,7 +4,7 @@ NAME      = $(call json,name)
 VERSION   = $(call json,version)
 LICENSE   = $(call json,license)
 HOMEPAGE  = $(call json,homepage)
-COPYRIGHT = 2012-$(shell date -j -f "%a %b %d %T %Z %Y" "`date`" "+%Y")
+COPYRIGHT = 2012-$(shell TZ=UTC date +%Y)
 
 define HEADER
 /*  $(NAME).js - v$(VERSION)
