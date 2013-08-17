@@ -1,1 +1,1 @@
-script: phantomjs test/index.js
+script: make ci

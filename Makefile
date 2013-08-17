@@ -69,6 +69,8 @@ serve:
 	@python -m SimpleHTTPServer $(PORT)
 
 lint:
-	@`npm bin`/jshint -c jshint.json lib/**/*.js
+	@`npm bin`/jshint --show-non-errors --config jshint.json lib
 
-.PHONY: help pkgdir clean build package test serve lint
+ci: test lint
+
+.PHONY: help pkgdir clean build package test serve lint ci
