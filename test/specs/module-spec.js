@@ -748,8 +748,8 @@ describe('m.module()', function () {
       });
     });
 
-    it('is an instance of Broadcast', function () {
-      assert.instanceOf(this.subject, window.Broadcast);
+    it('is an instance of Events', function () {
+      assert.instanceOf(this.subject, m.Events);
     });
 
     it('assigns .el as the element option', function () {

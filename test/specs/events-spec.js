@@ -6,8 +6,8 @@ describe('m.events', function () {
     events._callbacks = callbacks;
   });
 
-  it('is an instance of Broadcast', function () {
-    assert.instanceOf(events, window.Broadcast);
+  it('is an instance of Events', function () {
+    assert.instanceOf(events, m.Events);
   });
 
   describe('', function () {
