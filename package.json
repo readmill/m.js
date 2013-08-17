@@ -2,14 +2,20 @@
   "name": "m",
   "version": "0.2.0",
   "description": "A modular JavaScript system for websites",
-  "homepage": "http://github.com/readmill/m.js",
+  "homepage": "https://github.com/readmill/m.js",
   "main": "lib/m.js",
+  "scripts": {
+    "test": "make test"
+  },
   "devDependencies": {
     "uglify-js": "~2.3.6",
     "jshint": "~2.1.10"
   },
-  "repository": "",
-  "author": "",
+  "repository": "https://github.com/readmill/m.js.git",
+  "author": "Aron Carroll <aron@readmill.com>",
+  "contributors": [
+    "Jeff Chan <jefftchan@gmail.com>"
+  ],
   "license": "MIT",
   "readmeFilename": "README",
   "private": true
