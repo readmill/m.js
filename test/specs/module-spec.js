@@ -294,7 +294,7 @@ describe('m.module()', function () {
       assert.calledWith(this.document.on, 'click', '[data-test]', {
         factory: this.factory,
         options: this.events[0]
-      }, module.delegate.handler);
+      }, module.delegateHandler);
     });
 
     it('sets the `hasDelegated` flag on the factory', function () {
@@ -309,7 +309,7 @@ describe('m.module()', function () {
     });
   });
 
-  describe('module.delegate.handler', function () {
+  describe('module.delegateHandler', function () {
     beforeEach(function () {
       this.let('element', document.createElement('div'));
       this.let('factory', new ModuleFactory('test'));
@@ -325,18 +325,18 @@ describe('m.module()', function () {
     });
 
     it('instantiates the module with the factory and current event target', function () {
-      module.delegate.handler(this.event);
+      module.delegateHandler(this.event);
       assert.calledWith(module.instance, this.factory, this.element);
     });
 
     it('prevents the default event action', function () {
-      module.delegate.handler(this.event);
+      module.delegateHandler(this.event);
       assert.isTrue(this.event.isDefaultPrevented());
     });
 
     it('does not prevent the default event action if options.preventDefault is false', function () {
       this.event.data.options.preventDefault = false;
-      module.delegate.handler(this.event);
+      module.delegateHandler(this.event);
       assert.isFalse(this.event.isDefaultPrevented());
     });
 
@@ -346,14 +346,14 @@ describe('m.module()', function () {
         event.data.options.callback = value;
 
         assert.doesNotThrow(function () {
-          module.delegate.handler(event);
+          module.delegateHandler(event);
         });
       }, this);
     });
 
     it('does nothing if the meta key is held down', function () {
       this.event.metaKey = true;
-      module.delegate.handler(this.event);
+      module.delegateHandler(this.event);
       assert.notCalled(module.instance);
     });
   });
