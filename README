@@ -20,8 +20,18 @@ Dependancies
 m requires that the jQuery[1] and underscore[2] libraries are available on
 the page before the m.js script is included.
 
+
+m also works using Zepto[3], a lightweight alternative to jQuery designed
+for modern browsers and mobile devices. Just include Zepto instead of jQuery
+in your document.
+
+__NOTE:__ One known caveat with using Zepto is that the .teardown() method on
+a module will not be called when a dom element is removed from the document.
+You'll need to manage this yourself or port the special events API to Zepto.
+
 [1]: http://jquery.com
 [2]: http://underscorejs.org
+[3]: http://zeptojs.com/
 
 Development
 -----------
@@ -76,6 +86,11 @@ And open the browser at http://localhost:8000. You can choose a port by providin
 a `PORT` env variable to make.
 
     $ make test PORT=4567
+
+Finally, you can run the tests using an alternative DOM library such as Zepto
+by passing the `DOM_LIBRARY` variable to make.
+
+    $ make test DOM_LIBRARY=zepto
 
 [1]: http://phantomjs.org
 

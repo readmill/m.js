@@ -1,6 +1,7 @@
 var fs = require('fs'),
     page = require('webpage').create(),
     server = require('webserver').create(),
+    system = require('system'),
     suite, grep, hasFailed = false;
 
 server.listen(8888, function (request, response) {
@@ -35,6 +36,12 @@ suite = 'http://localhost:8888/test/index.html';
 grep  = phantom.args[0];
 if (grep) {
   suite += '?grep=' + grep;
+}
+
+// Pass in a dom library via an environment variable.
+// $ DOM_LIBRARY=zepto make test
+if (system.env.DOM_LIBRARY) {
+  suite += '#' + system.env.DOM_LIBRARY;
 }
 
 page.open(suite, function (status) {

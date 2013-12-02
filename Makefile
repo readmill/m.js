@@ -71,6 +71,9 @@ serve:
 lint:
 	@`npm bin`/jshint --show-non-errors --config jshint.json lib
 
-ci: test lint
+ci:
+	@$(MAKE) test
+	@$(MAKE) test DOM_LIBRARY=zepto
+	@$(MAKE) lint
 
 .PHONY: help pkgdir clean build package test serve lint ci
