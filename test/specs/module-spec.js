@@ -270,31 +270,39 @@ describe('m.module()', function () {
 
   describe('.delegate()', function () {
     beforeEach(function () {
-      this.let('document', $(document));
-      this.let('factory', new ModuleFactory('test'));
       this.let('events', [{on: 'click'}, {on: 'keypress'}]);
+      this.let('factory', new ModuleFactory('test', {events: this.events}));
 
       this.factory.events = this.events;
 
-      sinon.stub(m, '$').returns(this.document);
-      sinon.stub(this.document, 'on');
+      this.el = document.createElement('div');
+      this.el.setAttribute('data-test', '');
+      document.body.appendChild(this.el);
+
+      sinon.stub(module.delegate, 'handler');
     });
 
     afterEach(function () {
-      m.$.restore();
+      document.body.removeChild(this.el);
+      module.delegate.handler.restore();
     });
 
     it('registers an event handler on the document for each event', function () {
       module.delegate(this.factory);
-      assert.calledTwice(this.document.on);
+      $(this.el).trigger('click');
+      $(this.el).trigger('keypress');
+      assert.calledTwice(module.delegate.handler);
     });
 
     it('passes in the factory and options as data properties of the event', function () {
       module.delegate(this.factory);
-      assert.calledWith(this.document.on, 'click', '[data-test]', {
-        factory: this.factory,
-        options: this.events[0]
-      }, module.delegate.handler);
+      $(this.el).trigger('click');
+      assert.calledWith(module.delegate.handler, sinon.match({
+        data: {
+          factory: this.factory,
+          options: this.events[0]
+        }
+      }));
     });
 
     it('sets the `hasDelegated` flag on the factory', function () {
@@ -305,7 +313,8 @@ describe('m.module()', function () {
     it('does nothing if the `hasDelegated` flag is set on the factory', function () {
       this.factory.hasDelegated = true;
       module.delegate(this.factory);
-      assert.notCalled(this.document.on);
+      $(this.el).trigger('click');
+      assert.notCalled(module.delegate.handler);
     });
   });
 
