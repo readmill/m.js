@@ -102,9 +102,9 @@ describe('m.module()', function () {
 
   describe('.initialize()', function () {
     beforeEach(function () {
-      this.let('element1', jQuery('<div data-test1>').appendTo(this.fixture));
-      this.let('element2', jQuery('<div data-test1>').appendTo(this.fixture));
-      this.let('element3', jQuery('<div data-test2>').appendTo(this.fixture));
+      this.let('element1', $('<div data-test1>').appendTo(this.fixture));
+      this.let('element2', $('<div data-test1>').appendTo(this.fixture));
+      this.let('element3', $('<div data-test2>').appendTo(this.fixture));
 
       this.let('test1', function () {
         return new ModuleFactory('test1', {});
@@ -270,18 +270,18 @@ describe('m.module()', function () {
 
   describe('.delegate()', function () {
     beforeEach(function () {
-      this.let('document', jQuery(document));
+      this.let('document', $(document));
       this.let('factory', new ModuleFactory('test'));
       this.let('events', [{on: 'click'}, {on: 'keypress'}]);
 
       this.factory.events = this.events;
 
-      sinon.stub(jQuery.fn, 'init').returns(this.document);
+      sinon.stub(m, '$').returns(this.document);
       sinon.stub(this.document, 'on');
     });
 
     afterEach(function () {
-      jQuery.fn.init.restore();
+      m.$.restore();
     });
 
     it('registers an event handler on the document for each event', function () {
@@ -314,7 +314,14 @@ describe('m.module()', function () {
       this.let('element', document.createElement('div'));
       this.let('factory', new ModuleFactory('test'));
       this.let('event', function () {
-        return jQuery.Event('click', {currentTarget: this.element, data: {factory: this.factory, options: {}}});
+        // Manually build an event instance and override properties. We clone
+        // the original $.Event because the standard browser Event does not
+        // allow currentTarget to be set and will just remain null.
+        return _.extend({}, m.$.Event('click'), {
+          preventDefault: sinon.spy(),
+          currentTarget: this.element,
+          data: {factory: this.factory, options: {}}
+        });
       });
 
       sinon.stub(module, 'instance');
@@ -331,7 +338,7 @@ describe('m.module()', function () {
 
     it('prevents the default event action', function () {
       module.delegate.handler(this.event);
-      assert.isTrue(this.event.isDefaultPrevented());
+      assert.called(this.event.preventDefault);
     });
 
     it('does not prevent the default event action if options.preventDefault is false', function () {
@@ -624,7 +631,7 @@ describe('m.module()', function () {
 
     describe('.extract()', function () {
       it('extracts the data keys from the element', function () {
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-not-module': 'skip',
           'data-example': 'skip',
           'data-example-a': 'capture',
@@ -637,7 +644,7 @@ describe('m.module()', function () {
       });
 
       it('converts JSON contents of keys into JS primitives', function () {
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-example-null': 'null',
           'data-example-int': '100',
           'data-example-arr': '[1, 2, 3]',
@@ -657,7 +664,7 @@ describe('m.module()', function () {
       });
 
       it('uses strings for content that it cannot parse as JSON', function () {
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-example-url': 'http://example.com/path/to.html',
           'data-example-bad': '{oh: 1, no'
         })[0];
@@ -671,7 +678,7 @@ describe('m.module()', function () {
       });
 
       it('converts keys with hyphens into camelCase', function () {
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-example-long-property': 'long',
           'data-example-really-very-long-property': 'longer'
         })[0];
@@ -687,7 +694,7 @@ describe('m.module()', function () {
       it('handles modules with hyphens in the name', function () {
         this.name = 'long-example';
 
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-long-example-long-property': 'long',
           'data-long-example-really-very-long-property': 'longer'
         })[0];
@@ -701,7 +708,7 @@ describe('m.module()', function () {
       });
 
       it('sets boolean attributes to true', function () {
-        var element = jQuery('<div>', {
+        var element = $('<div>', {
           'data-example-long-property': ''
         })[0];
 
@@ -714,7 +721,7 @@ describe('m.module()', function () {
 
   describe('Module()', function () {
     beforeEach(function () {
-      this.let('el', jQuery('<div />')[0]);
+      this.let('el', $('<div />')[0]);
       this.let('sandbox', m.sandbox());
       this.let('options', function () {
         return {el: this.el, sandbox: this.sandbox};
@@ -733,8 +740,15 @@ describe('m.module()', function () {
       assert.ok(this.subject.el === this.el);
     });
 
-    it('wraps .$el in jQuery if not already wrapped', function () {
-      assert.ok(this.subject.$el instanceof jQuery);
+    it('wraps .$el in $ if not already wrapped', function () {
+      // Zepto appears to extend the normal array. So is more difficult to
+      // test for than jQuery so here we have a forked test :(
+      // https://github.com/madrobby/zepto/issues/349#issuecomment-4985091
+      if (m.$.zepto) {
+        assert.ok(m.$.zepto.isZ(this.subject.$el));
+      } else {
+        assert.ok(this.subject.$el instanceof m.$);
+      }
     });
 
     it('assigns the sandbox property', function () {
@@ -780,16 +794,23 @@ describe('m.module()', function () {
       assert.called(target);
     });
 
-    it('tears down when module element is removed', function () {
-      var target = this.subject.teardown = sinon.spy();
-      this.fixture.appendChild(this.subject.el);
-      this.subject.$el.remove();
-      assert.called(target);
-    });
+    // The teardown feature is not currently supported by Zepto and needs
+    // to be patched in with another library[1]?
+    // [1]: https://github.com/Enideo/zepto-events-special
+    if (m.$.zepto) {
+      it('auto teardown after dom removal is not supported using Zepto due to a lack of $.event.special support');
+    } else {
+      it('tears down when module element is removed', function () {
+        var target = this.subject.teardown = sinon.spy();
+        this.fixture.appendChild(this.subject.el);
+        this.subject.$el.remove();
+        assert.called(target);
+      });
+    }
 
     describe('.$()', function () {
       it('find children within the module element', function () {
-        this.subject.$el.append(jQuery('<input /><input />'));
+        this.subject.$el.append($('<input /><input />'));
         assert.equal(this.subject.$('input').length, 2);
       });
     });
@@ -887,10 +908,15 @@ describe('m.module()', function () {
         var target = this.subject._onClick = sinon.spy();
         this.subject.el.appendChild(document.createElement('span'));
 
+        // Append to body for event bubbling to work.
+        document.body.appendChild(this.subject.el)
+
         this.subject.delegateEvents({'click span': '_onClick'});
-        this.subject.$('span').click();
+        this.subject.$('span').trigger('click');
 
         assert.called(target);
+
+        document.body.removeChild(this.subject.el)
       });
 
       it('binds the handler to the module scope', function () {
