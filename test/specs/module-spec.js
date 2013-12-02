@@ -297,12 +297,7 @@ describe('m.module()', function () {
     it('passes in the factory and options as data properties of the event', function () {
       module.delegate(this.factory);
       $(this.el).trigger('click');
-      assert.calledWith(module.delegate.handler, sinon.match({
-        data: {
-          factory: this.factory,
-          options: this.events[0]
-        }
-      }));
+      assert.calledWith(module.delegate.handler, this.factory, this.events[0], sinon.match.object);
     });
 
     it('sets the `hasDelegated` flag on the factory', function () {
@@ -341,35 +336,32 @@ describe('m.module()', function () {
     });
 
     it('instantiates the module with the factory and current event target', function () {
-      module.delegate.handler(this.event);
+      module.delegate.handler(this.factory, {}, this.event);
       assert.calledWith(module.instance, this.factory, this.element);
     });
 
     it('prevents the default event action', function () {
-      module.delegate.handler(this.event);
+      module.delegate.handler(this.factory, {}, this.event);
       assert.called(this.event.preventDefault);
     });
 
     it('does not prevent the default event action if options.preventDefault is false', function () {
-      this.event.data.options.preventDefault = false;
-      module.delegate.handler(this.event);
+      module.delegate.handler(this.factory, {preventDefault: false}, this.event);
       assert.isFalse(this.event.isDefaultPrevented());
     });
 
     it('does not try to call options.callback if it is not a function', function () {
       [null, undefined, 'string', 10, false, true].forEach(function (value) {
         var event = this.event;
-        event.data.options.callback = value;
-
         assert.doesNotThrow(function () {
-          module.delegate.handler(event);
+          module.delegate.handler(this.factory, {callback: value}, event);
         });
       }, this);
     });
 
     it('does nothing if the meta key is held down', function () {
       this.event.metaKey = true;
-      module.delegate.handler(this.event);
+      module.delegate.handler(this.factory, {preventDefault: false}, this.event);
       assert.notCalled(module.instance);
     });
   });
