@@ -48,7 +48,7 @@ build: pkgdir
 	@rm -f $(MAXOUT)
 	@cat vendor/{soak,broadcast}.js > $(MAXOUT)
 	@echo "$$HEADER" >> $(MAXOUT)
-	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(MAXOUT)
+	@cat lib/m.js lib/m/{dom,create,remove,sandbox,events,module}.js >> $(MAXOUT)
 	@echo Created $(MAXOUT)
 
 package: clean build
