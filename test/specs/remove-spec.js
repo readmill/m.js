@@ -1,5 +1,9 @@
 describe('jQuery.event.special.remove', function () {
 
+  if (!m.$.event || !m.$.event.special) {
+    return it('The current DOM library does not support the jQuery.event.special API');
+  }
+
   beforeEach(function () {
     this.let('$element', function () {
       return jQuery('<div>');

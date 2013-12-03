@@ -1,1 +1,2 @@
-script: phantomjs test/index.js
+language: node_js
+script: make ci

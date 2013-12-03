@@ -4,7 +4,7 @@ NAME      = $(call json,name)
 VERSION   = $(call json,version)
 LICENSE   = $(call json,license)
 HOMEPAGE  = $(call json,homepage)
-COPYRIGHT = 2012-$(shell date -j -f "%a %b %d %T %Z %Y" "`date`" "+%Y")
+COPYRIGHT = 2012-$(shell TZ=UTC date +%Y)
 
 define HEADER
 /*  $(NAME).js - v$(VERSION)
@@ -48,7 +48,7 @@ build: pkgdir
 	@rm -f $(MAXOUT)
 	@cat vendor/{soak,broadcast}.js > $(MAXOUT)
 	@echo "$$HEADER" >> $(MAXOUT)
-	@cat lib/m.js lib/m/{create,remove,sandbox,events,module}.js >> $(MAXOUT)
+	@cat lib/m.js lib/m/{dom,create,remove,sandbox,events,module}.js >> $(MAXOUT)
 	@echo Created $(MAXOUT)
 
 package: clean build
@@ -69,6 +69,11 @@ serve:
 	@python -m SimpleHTTPServer $(PORT)
 
 lint:
-	@`npm bin`/jshint -c jshint.json lib/**/*.js
+	@`npm bin`/jshint --show-non-errors --config jshint.json lib
 
-.PHONY: help pkgdir clean build package test serve lint
+ci:
+	@$(MAKE) test
+	@$(MAKE) test DOM_LIBRARY=zepto
+	@$(MAKE) lint
+
+.PHONY: help pkgdir clean build package test serve lint ci
