@@ -1,3 +1,7 @@
+2013-12-02 v0.2.2
+
+* Refactor the module methods into a constructor function.
+
 2013-12-02 v0.2.1
 
 * Add support for Zepto #7.
