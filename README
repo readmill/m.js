@@ -14,7 +14,7 @@ The whole library minified and gzipped currently weighs in at around 3.5kb.
 
 [1]: https://github.com/readmill/m.js/releases
 
-Dependancies
+Dependencies
 ------------
 
 m requires that the jQuery[1] and underscore[2] libraries are available on
