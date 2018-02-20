@@ -105,7 +105,7 @@ be the module name ending with `-spec.js`.
 - Chai[2]: Assertion library, we use `assert` style.
 - Sinon[3]: Mocking and stubbing library.
 
-[1]: http://visionmedia.github.com/mocha/
+[1]: http://mochajs.org/
 [2]: http://chaijs.com/api/assert/
 [3]: http://sinonjs.org/docs
 
